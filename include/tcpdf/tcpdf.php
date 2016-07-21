@@ -4,6 +4,9 @@
 
 Modification information for LGPL compliance
 
+Wed May 5 2016 jvink - BR-4172 - Remove Imagick section to embed images to
+                       prevent any attack vectors as per CVE-2016-3714.
+
 Fri Dec 2 2011 smalyshev - Added unserialize/destruct vulnerability protection
 
 Mon May 30 16:16:13 2011 +0300 - alex-vlasov - Bug 41216 - currency is displayed on 2 lines instead of one when printing a quote to PDF
@@ -4541,20 +4544,6 @@ if (!class_exists('TCPDF', false)) {
 						} else {
 							$info = $this->_toJPEG($img);
 						}
-					} elseif (extension_loaded('imagick')) {
-						// ImageMagick library
-						$img = new Imagick();
-						$img->readImage($file);
-						if ($resize) {
-							$img->resizeImage($neww, $newh, 10, 1, false);
-						}
-						$img->setCompressionQuality($this->jpeg_quality);
-						$img->setImageFormat('jpeg');
-						$tempname = tempnam(K_PATH_CACHE, 'jpg_');
-						$img->writeImage($tempname);
-						$info = $this->_parsejpeg($tempname);
-						unlink($tempname);
-						$img->destroy();
 					}
 					else if ($type == 'jpeg') {
 						$info = $this->_parsejpeg($file);

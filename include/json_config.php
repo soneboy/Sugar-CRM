@@ -201,6 +201,7 @@ class json_config {
 		$all_fields = $focus->column_fields;
 		// MEETING SPECIFIC
 		$all_fields = array_merge($all_fields,array('required','accept_status','name')); // need name field for contacts and users
+        $all_fields = $this->listFilter($focus->module_dir, $all_fields);
 		//$all_fields = array_merge($focus->column_fields,$focus->additional_column_fields);
 
 		$module_arr = array();
@@ -220,5 +221,49 @@ class json_config {
 			$GLOBALS['log']->debug("JSON_SERVER:populate bean:");
 			return $module_arr;
 		}
-	}
-?>
+
+    /**
+     * @param string $module
+     * @param array $fields
+     *
+     * @return array
+     */
+    protected function listFilter($module, $fields)
+    {
+        $currentUser = $this->getCurrentUser();
+
+        // admin users can access any field
+        if ($currentUser && $currentUser->isAdminForModule($module)) {
+            return $fields;
+        }
+
+        $noAccessFields = array(
+            'Users' => array(
+                'show_on_employees' => true,
+                'portal_only' => true,
+                'is_group' => true,
+                'system_generated_password' => true,
+                'external_auth_only' => true,
+                'sugar_login' => true,
+                'authenticate_id' => true,
+                'pwd_last_changed' => true,
+                'user_hash' => true,
+                'password' => true,
+                'last_login' => true,
+            ),
+        );
+        if (!empty($noAccessFields[$module])) {
+            $fields = array_diff($fields, array_keys($noAccessFields[$module]));
+        }
+        return $fields;
+    }
+
+    /**
+     * Get current user
+     * @return User|null
+     */
+    protected function getCurrentUser()
+    {
+        return isset($GLOBALS['current_user']) ? $GLOBALS['current_user'] : null;
+    }
+}
