@@ -1,5 +1,4 @@
 <?php
- if(!defined('sugarEntry') || !sugarEntry) die('Not A Valid Entry Point');
 /*********************************************************************************
  * SugarCRM Community Edition is a customer relationship management program developed by
  * SugarCRM, Inc. Copyright (C) 2004-2013 SugarCRM Inc.
@@ -36,12 +35,46 @@
  ********************************************************************************/
 
 
+require_once 'include/utils/file_utils.php';
 
+class SanitizeFilepathTest extends Sugar_PHPUnit_Framework_TestCase
+{
+    public function filepathDataProvider()
+    {
+        return array(
+            array(
+                '/var/www/sugar/upload/',
+                '/var/www/sugar/upload/'
+            ),
+            array(
+                '/var/www/sugar/upload/../../.../../etc/passwd',
+                '/var/www/sugar/upload/etc/passwd'
+            ),
+            array(
+                './upload/file.php',
+                'upload/file.php'
+            ),
+            array(
+                'upload/file"`:.php',
+                'upload/file.php'
+            ),
+            array(
+                "upload/\x00\x00file.php",
+                'upload/file.php'
+            ),
+        );
+    }
 
-$sugar_version      = '6.5.26';
-$sugar_db_version   = '6.5.26';
-$sugar_flavor       = 'CE';
-$sugar_build		= '378';
-$sugar_timestamp    = '2017-05-25 12:38PM';
+    /**
+     * @dataProvider filepathDataProvider
+     */
+    public function testSanitizeFilepath($filepath, $expected)
+    {
+        $this->assertEquals($expected, validate_path($filepath));
+    }
 
-?>
+    public function testSanitizeFilepathNoLeadSlash($filepath, $expected)
+    {
+        $this->assertEquals('Contacts/controller.php', validate_path('/Contacts/controller.php', true));
+    }
+}
